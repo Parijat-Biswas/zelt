@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LedgerFlow — Personal Finance Expense & Debt Tracker</title>
+  <meta name="description" content="A modern, spreadsheet-inspired debt, credit, and personal expense tracking workspace. Manage lent and borrowed money with a beautiful, fast, and visual glassmorphism UI.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Primary Styling -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Glowing Background Orbs -->
+  <div class="glow-orb orb-1" aria-hidden="true"></div>
+  <div class="glow-orb orb-2" aria-hidden="true"></div>
+  <div class="glow-orb orb-3" aria-hidden="true"></div>
+
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="logo-wrapper">
+          <span class="logo-text">Ledger<span>Flow</span></span>
+        </div>
+        <div class="autosave-badge" id="autosave-status">
+          <span class="badge-dot"></span>
+          <span class="badge-text">Saved</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <button class="menu-item active" id="nav-dashboard" aria-label="Go to Dashboard">
+          Dashboard Hub
+        </button>
+        <button class="menu-item" id="nav-ledger" aria-label="Go to Ledger Sheets">
+          Interactive Sheet
+        </button>
+        <button class="menu-item" id="nav-reminders" aria-label="Go to Reminders and Alerts">
+          Reminders
+          <span class="menu-badge" id="reminders-count" style="display: none;">0</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="profile-avatar">💰</div>
+          <div class="profile-info">
+            <span class="profile-name">My Workspace</span>
+            <span class="profile-status">Personal Finance</span>
+          </div>
+        </div>
+        
+        <!-- Theme Toggle -->
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Dark/Light Mode">
+          <div class="toggle-track">
+            <div class="toggle-thumb">
+              <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+          </div>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main-content">
+      
+      <!-- Top Bar / Workspace Header -->
+      <header class="app-header">
+        <div class="header-title-area">
+          <h1 id="page-title">Dashboard Hub</h1>
+          <p class="header-subtitle" id="page-subtitle">Welcome back. Here is your financial posture at a glance.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" id="btn-export-csv" aria-label="Export data to CSV">
+            Export CSV
+          </button>
+          <button class="btn btn-secondary" id="btn-import-csv" aria-label="Import data from CSV">
+            Import CSV
+          </button>
+          <button class="btn btn-primary btn-glow" id="btn-quick-add" aria-label="Create a new entry">
+            Quick Entry
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW 1: DASHBOARD HUB -->
+      <section class="content-section active" id="section-dashboard">
+        
+        <!-- Metrics Ribbon -->
+        <div class="metrics-grid">
+          <div class="metric-card lent">
+            <div class="metric-header">
+              <span class="metric-label">Total Lent (They owe me)</span>
+            </div>
+            <div class="metric-value" id="val-total-lent">₹0.00</div>
+            <div class="metric-meta text-emerald">Ready for collection</div>
+          </div>
+          
+          <div class="metric-card borrowed">
+            <div class="metric-header">
+              <span class="metric-label">Total Borrowed (I owe them)</span>
+            </div>
+            <div class="metric-value" id="val-total-borrowed">₹0.00</div>
+            <div class="metric-meta text-rose">Payable liabilities</div>
+          </div>
+
+          <div class="metric-card net">
+            <div class="metric-header">
+              <span class="metric-label">Net Balance Position</span>
+            </div>
+            <div class="metric-value" id="val-net-balance">₹0.00</div>
+            <div class="metric-meta" id="val-net-desc">Neutral stance</div>
+          </div>
+
+          <div class="metric-card collection">
+            <div class="metric-header">
+              <span class="metric-label">Settlement Progress</span>
+            </div>
+            <div class="metric-value" id="val-settle-pct">0%</div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="val-settle-progress" style="width: 0%;"></div>
+            </div>
+            <div class="metric-meta" id="val-settle-desc">0 of 0 paid</div>
+          </div>
+        </div>
+
+        <!-- Analytical Center -->
+        <div class="analytics-layout">
+          
+          <!-- Interactive Visual Chart -->
+          <div class="dashboard-panel chart-panel">
+            <div class="panel-header">
+              <h2>Lent vs Borrowed Trends</h2>
+              <span class="panel-subtitle">Visual dynamic cash projection</span>
+            </div>
+            <div class="chart-wrapper">
+              <!-- Animated SVG Line Chart -->
+              <svg class="analytics-svg" id="trend-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
+                <defs>
+                  <!-- Glow Filters -->
+                  <filter id="glow-lent" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <filter id="glow-borrowed" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <!-- Gradient fills -->
+                  <linearGradient id="grad-lent" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--status-lent)" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="var(--status-lent)" stop-opacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="grad-borrowed" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--status-borrowed)" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="var(--status-borrowed)" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <!-- Chart Grid Lines -->
+                <line x1="0" y1="40" x2="500" y2="40" stroke="var(--border-subtle)" stroke-dasharray="4,4" />
+                <line x1="0" y1="100" x2="500" y2="100" stroke="var(--border-subtle)" stroke-dasharray="4,4" />
+                <line x1="0" y1="160" x2="500" y2="160" stroke="var(--border-subtle)" stroke-dasharray="4,4" />
+                
+                <!-- Chart Paths (filled dynamically by app.js) -->
+                <path id="chart-area-lent" fill="url(#grad-lent)" d="M0,200 L500,200 Z" />
+                <path id="chart-area-borrowed" fill="url(#grad-borrowed)" d="M0,200 L500,200 Z" />
+                <path id="chart-line-lent" fill="none" stroke="var(--status-lent)" stroke-width="3" filter="url(#glow-lent)" d="" />
+                <path id="chart-line-borrowed" fill="none" stroke="var(--status-borrowed)" stroke-width="3" filter="url(#glow-borrowed)" d="" />
+              </svg>
+              <!-- Chart Tooltip -->
+              <div class="chart-tooltip" id="chart-tooltip">Hover over chart points</div>
+            </div>
+            <!-- Chart Legend -->
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-color color-lent"></span>Lent (Receivables)</span>
+              <span class="legend-item"><span class="legend-color color-borrowed"></span>Borrowed (Liabilities)</span>
+            </div>
+          </div>
+
+          <!-- Live Activity Log -->
+          <div class="dashboard-panel activity-panel">
+            <div class="panel-header">
+              <h2>Recent Activities</h2>
+              <span class="panel-subtitle">Real-time ledger updates</span>
+            </div>
+            <div class="activity-list" id="activity-log-container">
+              <!-- Populated dynamically -->
+              <div class="empty-state">No activities recorded yet. Start editing to populate!</div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- VIEW 2: INTERACTIVE SHEET WORKSPACE -->
+      <section class="content-section" id="section-ledger">
+        
+        <!-- Search & Dynamic Filter Panel -->
+        <div class="workspace-filters-bar">
+          <div class="search-input-wrapper">
+            <input type="text" id="search-input" placeholder="Search people, tags, descriptions..." aria-label="Search ledger items">
+            <button class="clear-search-btn" id="btn-clear-search" style="display: none;" aria-label="Clear search">×</button>
+          </div>
+          
+          <div class="filter-pills" role="radiogroup" aria-label="Filter transactions">
+            <button class="filter-pill active" data-filter="all" role="radio" aria-checked="true">All</button>
+            <button class="filter-pill" data-filter="lent" role="radio" aria-checked="false">Lent</button>
+            <button class="filter-pill" data-filter="borrowed" role="radio" aria-checked="false">Borrowed</button>
+            <button class="filter-pill" data-filter="pending" role="radio" aria-checked="false">Pending</button>
+            <button class="filter-pill" data-filter="overdue" role="radio" aria-checked="false">Overdue</button>
+            <button class="filter-pill" data-filter="paid" role="radio" aria-checked="false">Paid</button>
+          </div>
+
+          <div class="filter-actions">
+            <select class="dropdown-select" id="sort-select" aria-label="Sort ledger items">
+              <option value="date-desc">Date: Newest First</option>
+              <option value="date-asc">Date: Oldest First</option>
+              <option value="amount-desc">Amount: High to Low</option>
+              <option value="amount-asc">Amount: Low to High</option>
+              <option value="name-asc">Name: A to Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- The Spreadsheet Flex Table Container -->
+        <div class="spreadsheet-container">
+          <div class="spreadsheet-wrapper">
+            
+            <table class="spreadsheet-table" id="ledger-table">
+              <thead id="ledger-table-head">
+                <!-- Dynamically injected column headers (People) by app.js -->
+              </thead>
+              <tbody id="ledger-table-body">
+                <!-- Dynamically injected double-decker cells by app.js -->
+              </tbody>
+            </table>
+
+          </div>
+
+          <!-- Table Bottom Bar -->
+          <div class="table-footer-bar">
+            <button class="btn btn-text btn-add-row" id="btn-add-table-row">
+              Add new line
+            </button>
+            <div class="table-stats">
+              Showing <span id="visible-rows-count">0</span> of <span id="total-rows-count">0</span> records
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- VIEW 3: REMINDERS AND ALERTS -->
+      <section class="content-section" id="section-reminders">
+        <div class="reminders-panel">
+          <div class="panel-header">
+            <h2>Payment Reminders</h2>
+            <span class="panel-subtitle">System calculated alerts for overdue and pending items</span>
+          </div>
+          
+          <div class="reminders-summary-card">
+            <div class="summary-metric">
+              <span class="summary-num" id="reminders-overdue-count">0</span>
+              <span class="summary-lbl">Overdue Bills</span>
+            </div>
+            <div class="summary-metric">
+              <span class="summary-num text-amber" id="reminders-pending-count">0</span>
+              <span class="summary-lbl">Pending Collections</span>
+            </div>
+          </div>
+
+          <div class="reminders-list" id="reminders-list-container">
+            <!-- Dynamic alerts -->
+            <div class="empty-state">No pending reminders. Everything is up to date!</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- QUICK ADD DIALOG MODAL -->
+  <div class="modal-overlay" id="quick-add-modal" aria-hidden="true" role="dialog">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>Quick Entry Creator</h2>
+        <button class="modal-close-btn" id="btn-close-modal" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="quick-add-form">
+        <div class="form-row-grid">
+          <div class="form-group flex-3">
+            <label for="form-name">Person Name</label>
+            <input type="text" id="form-name" required class="form-input" placeholder="e.g. Charlie Brown">
+          </div>
+        </div>
+
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="form-type">Flow Type</label>
+            <select id="form-type" class="form-select">
+              <option value="lent">Lent (They owe me)</option>
+              <option value="borrowed">Borrowed (I owe them)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="form-amount">Amount (₹)</label>
+            <input type="number" id="form-amount" required step="0.01" min="0.01" class="form-input" placeholder="0.00">
+          </div>
+        </div>
+
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="form-date">Transaction Date</label>
+            <input type="date" id="form-date" required class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="form-status">Initial Status</label>
+            <select id="form-status" class="form-select">
+              <option value="pending">Pending</option>
+              <option value="partial">Partial</option>
+              <option value="overdue">Overdue</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="form-tags">Tags / Categories (comma separated)</label>
+          <input type="text" id="form-tags" class="form-input" placeholder="e.g. Dining, Work, Travel">
+        </div>
+
+        <div class="form-group">
+          <label for="form-description">Description / Transaction Notes</label>
+          <textarea id="form-description" class="form-input form-textarea" placeholder="Add detailed notes here..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EXPANDABLE SIDE DETAIL DRAWER -->
+  <div class="drawer-overlay" id="detail-drawer-overlay" aria-hidden="true">
+    <div class="drawer-box">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <div>
+            <h2 id="drawer-name-title">Alex Johnson</h2>
+            <span class="drawer-subtitle" id="drawer-type-subtitle">Lent Transaction Details</span>
+          </div>
+        </div>
+        <button class="drawer-close-btn" id="btn-close-drawer" aria-label="Close details panel">&times;</button>
+      </div>
+
+      <div class="drawer-body">
+        
+        <!-- Editable details block -->
+        <div class="drawer-section">
+          <h3>Record Identifiers</h3>
+          <div class="drawer-editable-grid">
+            <div class="drawer-field">
+              <label for="drawer-input-name">Person</label>
+              <input type="text" id="drawer-input-name" class="form-input">
+            </div>
+          </div>
+          
+          <div class="drawer-editable-grid">
+            <div class="drawer-field">
+              <label for="drawer-select-type">Money Flow</label>
+              <select id="drawer-select-type" class="form-select">
+                <option value="lent">Lent (They owe me)</option>
+                <option value="borrowed">Borrowed (I owe them)</option>
+              </select>
+            </div>
+            <div class="drawer-field">
+              <label for="drawer-input-amount">Amount (₹)</label>
+              <input type="number" id="drawer-input-amount" step="0.01" class="form-input">
+            </div>
+          </div>
+
+          <div class="drawer-editable-grid">
+            <div class="drawer-field">
+              <label for="drawer-input-date">Date</label>
+              <input type="date" id="drawer-input-date" class="form-input">
+            </div>
+            <div class="drawer-field">
+              <label for="drawer-select-status">Status</label>
+              <select id="drawer-select-status" class="form-select">
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="partial">Partial</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="drawer-editable-grid">
+            <div class="drawer-field">
+              <label for="drawer-select-priority">Priority</label>
+              <select id="drawer-select-priority" class="form-select">
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+              </select>
+            </div>
+            <div class="drawer-field">
+              <label for="drawer-select-color">Highlight Row Color</label>
+              <select id="drawer-select-color" class="form-select">
+                <option value="none">Default</option>
+                <option value="rose-tint">Rose Tint (Alert)</option>
+                <option value="emerald-tint">Emerald Tint (Settled)</option>
+                <option value="amber-tint">Amber Tint (Attention)</option>
+                <option value="indigo-tint">Indigo Tint (Chill)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tags Edit Section -->
+        <div class="drawer-section">
+          <h3>Categories / Tags</h3>
+          <div class="drawer-tags-container" id="drawer-tags-list">
+            <!-- tags dynamically rendered here -->
+          </div>
+          <div class="drawer-tag-input-group">
+            <input type="text" id="drawer-tag-new-input" class="form-input text-xs" placeholder="Add custom tag...">
+            <button class="btn btn-secondary btn-xs" id="btn-drawer-add-tag">Add</button>
+          </div>
+        </div>
+
+        <!-- Rich Markdown Notes Field -->
+        <div class="drawer-section">
+          <h3>Rich Description & Notes</h3>
+          <div class="notes-explanation">Directly writes detail log to the spreadsheet. Supports raw notes.</div>
+          <textarea id="drawer-input-description" class="form-input form-textarea drawer-textarea" placeholder="Write logs, detailed specs or agreement history here..."></textarea>
+        </div>
+
+        <!-- Audit History & Ledger Timeline -->
+        <div class="drawer-section">
+          <h3>Record Audit Log</h3>
+          <div class="audit-timeline" id="drawer-audit-log">
+            <!-- Timeline details injected here -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="drawer-footer">
+        <button class="btn btn-danger" id="btn-drawer-delete-row" aria-label="Delete this transaction permanently">
+          Delete Record
+        </button>
+        <button class="btn btn-primary" id="btn-drawer-save-close">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIDDEN FILE INPUT FOR CSV IMPORT -->
+  <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+
+  <!-- CONFETTI CANVAS EFFECT -->
+  <canvas class="confetti-canvas" id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- Seed data and Main scripting orchestration -->
+  <script src="dummyData.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
