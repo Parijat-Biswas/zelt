@@ -1142,41 +1142,33 @@ button {
 /* --------------------------------------------------------------------------
    8. View 3: Reminders Elements
    -------------------------------------------------------------------------- */
-.reminders-panel {
-  max-width: 700px;
+/* --------------------------------------------------------------------------
+   8. View 3: Reminders and Dashboard Directory Elements
+   -------------------------------------------------------------------------- */
+.reminders-layout {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: 24px;
+  align-items: start;
 }
 
-.reminders-summary-card {
-  display: flex;
-  background-color: var(--bg-glass);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 20px;
-  gap: 40px;
-  margin-bottom: 24px;
+.reminder-creator-panel, .reminder-viewer-panel {
+  min-height: 400px;
 }
 
-.summary-metric {
+.custom-reminder-form {
   display: flex;
   flex-direction: column;
-}
-
-.summary-num {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--status-overdue);
-}
-
-.summary-lbl {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  gap: 12px;
 }
 
 .reminders-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .reminder-card {
@@ -1197,32 +1189,9 @@ button {
   border-color: var(--border-medium);
 }
 
-.reminder-card.overdue {
-  border-left: 4px solid var(--status-overdue);
-}
-
-.reminder-card.pending {
-  border-left: 4px solid var(--status-pending);
-}
-
-.reminder-flow-badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.reminder-flow-badge.lent {
-  background-color: var(--status-lent-bg);
-  color: var(--status-lent);
-}
-
-.reminder-flow-badge.borrowed {
-  background-color: var(--status-borrowed-bg);
-  color: var(--status-borrowed);
-}
+.reminder-card.priority-high { border-left: 4px solid var(--status-overdue); }
+.reminder-card.priority-medium { border-left: 4px solid var(--status-pending); }
+.reminder-card.priority-low { border-left: 4px solid var(--accent-purple); }
 
 .reminder-details {
   flex-grow: 1;
@@ -1231,6 +1200,7 @@ button {
 .reminder-title {
   font-weight: 600;
   font-size: 0.85rem;
+  color: var(--text-primary);
 }
 
 .reminder-desc {
@@ -1243,20 +1213,110 @@ button {
   text-align: right;
 }
 
-.reminder-amount {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
 .reminder-days {
   font-size: 0.65rem;
-  color: var(--status-overdue);
   font-weight: 600;
 }
 
-.reminder-card.pending .reminder-days {
-  color: var(--status-pending);
+.reminder-card.priority-high .reminder-days { color: var(--status-overdue); }
+.reminder-card.priority-medium .reminder-days { color: var(--status-pending); }
+.reminder-card.priority-low .reminder-days { color: var(--accent-purple); }
+
+.reminder-delete-btn {
+  background-color: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  margin-left: 10px;
+}
+
+.reminder-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* --------------------------------------------------------------------------
+   Pending People Directory styles
+   -------------------------------------------------------------------------- */
+.pending-people-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.pending-people-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 10px;
+  flex-grow: 1;
+}
+
+.pending-people-col {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 250px;
+}
+
+.col-list-header {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.people-pending-list {
+  list-style: none;
+  overflow-y: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.people-pending-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.8rem;
+  transition: all var(--transition-fast);
+}
+
+.people-pending-item:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  transform: translateX(2px);
+}
+
+.people-pending-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.people-pending-amount {
+  font-family: var(--font-body);
+  font-weight: 700;
 }
 
 /* --------------------------------------------------------------------------
@@ -1678,6 +1738,14 @@ button {
   }
 
   .analytics-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .reminders-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pending-people-columns {
     grid-template-columns: 1fr;
   }
 

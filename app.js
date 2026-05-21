@@ -12,6 +12,7 @@ class LedgerState {
     this.transactions = [];
     this.people = []; // Track unique borrowers representing columns
     this.activities = [];
+    this.customReminders = [];
     this.activeTab = "dashboard";
     this.filters = {
       type: "all",
@@ -76,6 +77,18 @@ class LedgerState {
       ];
       localStorage.setItem("lf_activities", JSON.stringify(this.activities));
     }
+
+    // Load Custom Reminders
+    const storedReminders = localStorage.getItem("lf_custom_reminders");
+    if (storedReminders) {
+      try {
+        this.customReminders = JSON.parse(storedReminders);
+      } catch (e) {
+        this.customReminders = [];
+      }
+    } else {
+      this.customReminders = [];
+    }
   }
 
   extractPeopleFromTransactions() {
@@ -95,6 +108,7 @@ class LedgerState {
     localStorage.setItem("lf_transactions", JSON.stringify(this.transactions));
     localStorage.setItem("lf_people", JSON.stringify(this.people));
     localStorage.setItem("lf_activities", JSON.stringify(this.activities));
+    localStorage.setItem("lf_custom_reminders", JSON.stringify(this.customReminders));
     
     if (!silent) {
       setTimeout(() => {
@@ -186,6 +200,13 @@ function initDOMElements() {
     valSettleProgress: document.getElementById("val-settle-progress"),
     valSettleDesc: document.getElementById("val-settle-desc"),
     activityLogContainer: document.getElementById("activity-log-container"),
+    
+    lentPendingPeopleList: document.getElementById("lent-pending-people-list"),
+    borrowedPendingPeopleList: document.getElementById("borrowed-pending-people-list"),
+    customReminderForm: document.getElementById("custom-reminder-form"),
+    reminderInputText: document.getElementById("reminder-input-text"),
+    reminderInputDate: document.getElementById("reminder-input-date"),
+    reminderSelectPriority: document.getElementById("reminder-select-priority"),
     
     searchInput: document.getElementById("search-input"),
     btnClearSearch: document.getElementById("btn-clear-search"),
@@ -295,6 +316,13 @@ function bindEventHandlers() {
     createRecordFromForm();
     closeModal();
   });
+
+  if (el.customReminderForm) {
+    el.customReminderForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      addCustomReminder();
+    });
+  }
 
   // Table add row click binding
   el.btnAddTableRow.style.display = "inline-flex";
@@ -426,38 +454,43 @@ function updateMetricsData() {
     activeCount++;
   });
   
-  el.valTotalLent.textContent = formatCurrency(lentSum);
-  el.valTotalBorrowed.textContent = formatCurrency(borrowedSum);
+  if (el.valTotalLent) el.valTotalLent.textContent = formatCurrency(lentSum);
+  if (el.valTotalBorrowed) el.valTotalBorrowed.textContent = formatCurrency(borrowedSum);
   
-  const net = lentSum - borrowedSum;
-  el.valNetBalance.textContent = formatCurrency(net);
-  
-  if (net > 0) {
-    el.valNetBalance.className = "metric-value text-emerald";
-    el.valNetDesc.textContent = "Positive Asset Position";
-    el.valNetDesc.className = "metric-meta text-emerald";
-  } else if (net < 0) {
-    el.valNetBalance.className = "metric-value text-rose";
-    el.valNetDesc.textContent = "Net Liability Position";
-    el.valNetDesc.className = "metric-meta text-rose";
-  } else {
-    el.valNetBalance.className = "metric-value";
-    el.valNetDesc.textContent = "Fully Settled Stance";
-    el.valNetDesc.className = "metric-meta";
+  if (el.valNetBalance) {
+    const net = lentSum - borrowedSum;
+    el.valNetBalance.textContent = formatCurrency(net);
+    
+    if (net > 0) {
+      el.valNetBalance.className = "metric-value text-emerald";
+      if (el.valNetDesc) {
+        el.valNetDesc.textContent = "Positive Asset Position";
+        el.valNetDesc.className = "metric-meta text-emerald";
+      }
+    } else if (net < 0) {
+      el.valNetBalance.className = "metric-value text-rose";
+      if (el.valNetDesc) {
+        el.valNetDesc.textContent = "Net Liability Position";
+        el.valNetDesc.className = "metric-meta text-rose";
+      }
+    } else {
+      el.valNetBalance.className = "metric-value";
+      if (el.valNetDesc) {
+        el.valNetDesc.textContent = "Fully Settled Stance";
+        el.valNetDesc.className = "metric-meta";
+      }
+    }
   }
   
-  const pct = activeCount > 0 ? Math.round((paidCount / activeCount) * 100) : 0;
-  el.valSettlePct.textContent = `${pct}%`;
-  el.valSettleProgress.style.width = `${pct}%`;
-  el.valSettleDesc.textContent = `${paidCount} of ${activeCount} records paid`;
+  if (el.valSettlePct) {
+    const pct = activeCount > 0 ? Math.round((paidCount / activeCount) * 100) : 0;
+    el.valSettlePct.textContent = `${pct}%`;
+    if (el.valSettleProgress) el.valSettleProgress.style.width = `${pct}%`;
+    if (el.valSettleDesc) el.valSettleDesc.textContent = `${paidCount} of ${activeCount} records paid`;
+  }
 
-  const overdueCount = state.transactions.filter(t => t.status === "overdue").length;
-  if (overdueCount > 0) {
-    el.remindersCount.textContent = overdueCount;
-    el.remindersCount.style.display = "inline-flex";
-  } else {
-    el.remindersCount.style.display = "none";
-  }
+  // Render Grouped Outstanding Balances Directory
+  renderPendingSettlementsDirectory();
 }
 
 function formatCurrency(val) {
@@ -782,6 +815,7 @@ function makeCellEditable(tdElement, transaction, field, inputCreator, valueExtr
 // 6. View 1: Analytical Center SVG Trend Line Curve Plotter
 // ==========================================================================
 function renderTrendChart() {
+  if (!el.trendSvg) return;
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const now = new Date();
   
@@ -961,49 +995,188 @@ function formatRelativeTime(date) {
 // ==========================================================================
 function renderReminders() {
   const container = el.remindersListContainer;
+  if (!container) return;
+  
   container.innerHTML = "";
   
-  const activeReminders = state.transactions.filter(t => t.status === "overdue" || (t.status !== "paid" && t.priority === "high"));
-  const overdueCount = state.transactions.filter(t => t.status === "overdue").length;
-  const pendingCount = state.transactions.filter(t => t.status === "pending" || t.status === "partial").length;
-  
-  el.remindersOverdueCount.textContent = overdueCount;
-  el.remindersPendingCount.textContent = pendingCount;
-  
-  if (activeReminders.length === 0) {
-    container.innerHTML = `<div class="empty-state">No pending reminders. Everything looks perfect!</div>`;
+  // Sidebar reminders count badge
+  const totalRemindersCount = state.customReminders.length;
+  if (el.remindersCount) {
+    if (totalRemindersCount > 0) {
+      el.remindersCount.textContent = totalRemindersCount;
+      el.remindersCount.style.display = "inline-flex";
+    } else {
+      el.remindersCount.style.display = "none";
+    }
+  }
+
+  if (el.remindersOverdueCount) {
+    const overdueCount = state.transactions.filter(t => t.status === "overdue").length;
+    el.remindersOverdueCount.textContent = overdueCount;
+  }
+  if (el.remindersPendingCount) {
+    const pendingCount = state.transactions.filter(t => t.status === "pending" || t.status === "partial").length;
+    el.remindersPendingCount.textContent = pendingCount;
+  }
+
+  if (state.customReminders.length === 0) {
+    container.innerHTML = `<div class="empty-state">No custom reminders yet. Create one to get started!</div>`;
     return;
   }
   
-  activeReminders.forEach(r => {
+  // Sort reminders: high priority first, then medium, then low, and then by date
+  const priorityWeight = { high: 3, medium: 2, low: 1 };
+  const sortedReminders = [...state.customReminders].sort((a, b) => {
+    const diff = (priorityWeight[b.priority] || 0) - (priorityWeight[a.priority] || 0);
+    if (diff !== 0) return diff;
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  sortedReminders.forEach(r => {
     const card = document.createElement("div");
-    const cl = r.status === "overdue" ? "reminder-card overdue" : "reminder-card pending";
-    card.className = cl;
+    card.className = `reminder-card priority-${r.priority}`;
     
-    const diff = Math.ceil((new Date() - new Date(r.date)) / (1000 * 60 * 60 * 24));
-    let timeText = "";
-    if (r.status === "overdue") {
-      timeText = `${diff} Days Overdue`;
-    } else {
-      timeText = `Pending (${diff} days old)`;
-    }
+    // Formatting date
+    const d = new Date(r.date);
+    const dateFormatted = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     
-    const flowText = r.type === "lent" ? "LENT" : "BORROWED";
-    const flowCls = r.type === "lent" ? "lent" : "borrowed";
-    
+    // Check if overdue
+    const isOverdue = new Date(r.date) < new Date() && new Date().toDateString() !== d.toDateString();
+    const statusText = isOverdue ? "Overdue" : "Pending";
+    const statusClass = isOverdue ? "text-rose" : "text-emerald";
+
     card.innerHTML = `
-      <span class="reminder-flow-badge ${flowCls}">${flowText}</span>
       <div class="reminder-details">
-        <div class="reminder-title">${r.name}</div>
-        <div class="reminder-desc">${r.description || "No notes provided."}</div>
+        <div class="reminder-title">${r.description}</div>
+        <div class="reminder-desc" style="margin-top: 4px; display: flex; gap: 8px; font-size: 0.7rem;">
+          <span style="text-transform: uppercase; font-weight: 700; color: var(--text-tertiary)">Priority:</span>
+          <span style="font-weight: 600; color: var(--accent-purple)">${r.priority}</span>
+          <span style="color: var(--text-tertiary)">|</span>
+          <span style="text-transform: uppercase; font-weight: 700; color: var(--text-tertiary)">Status:</span>
+          <span class="${statusClass}" style="font-weight: 600">${statusText}</span>
+        </div>
       </div>
-      <div class="reminder-meta">
-        <div class="reminder-amount">${formatCurrency(r.amount)}</div>
-        <span class="reminder-days">${timeText}</span>
+      <div class="reminder-meta" style="display: flex; align-items: center; gap: 16px;">
+        <span class="reminder-days" style="color: var(--text-secondary); font-size: 0.75rem;">${dateFormatted}</span>
+        <button class="reminder-delete-btn" onclick="deleteCustomReminder('${r.id}')" aria-label="Delete reminder">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
       </div>
     `;
     container.appendChild(card);
   });
+}
+
+function addCustomReminder() {
+  if (!el.reminderInputText || !el.reminderInputDate || !el.reminderSelectPriority) return;
+  const desc = el.reminderInputText.value.trim();
+  const date = el.reminderInputDate.value;
+  const priority = el.reminderSelectPriority.value;
+  
+  if (!desc || !date) return;
+  
+  const reminder = {
+    id: "rem-" + Date.now(),
+    description: desc,
+    date: date,
+    priority: priority,
+    completed: false
+  };
+  
+  state.customReminders.push(reminder);
+  state.logActivity(`Added custom reminder: "${desc}"`, "⏰");
+  state.save();
+  
+  if (el.customReminderForm) {
+    el.customReminderForm.reset();
+  }
+  
+  renderApp();
+}
+
+function deleteCustomReminder(id) {
+  const idx = state.customReminders.findIndex(r => r.id === id);
+  if (idx !== -1) {
+    const removed = state.customReminders.splice(idx, 1)[0];
+    state.logActivity(`Removed custom reminder: "${removed.description}"`, "🗑️");
+    state.save();
+    renderApp();
+  }
+}
+
+window.deleteCustomReminder = deleteCustomReminder;
+
+function renderPendingSettlementsDirectory() {
+  const lentList = el.lentPendingPeopleList;
+  const borrowedList = el.borrowedPendingPeopleList;
+  
+  if (!lentList || !borrowedList) return;
+  
+  lentList.innerHTML = "";
+  borrowedList.innerHTML = "";
+  
+  const balances = {};
+  
+  state.transactions.forEach(t => {
+    if (t.status === "paid") return;
+    
+    const val = Number(t.amount) || 0;
+    const name = t.name.trim();
+    if (!name) return;
+    
+    if (!balances[name]) {
+      balances[name] = 0;
+    }
+    
+    if (t.type === "lent") {
+      balances[name] += val;
+    } else {
+      balances[name] -= val;
+    }
+  });
+  
+  const oweYouList = [];
+  const youOweList = [];
+  
+  Object.keys(balances).forEach(name => {
+    const net = balances[name];
+    if (net > 0) {
+      oweYouList.push({ name, amount: net });
+    } else if (net < 0) {
+      youOweList.push({ name, amount: Math.abs(net) });
+    }
+  });
+  
+  oweYouList.sort((a, b) => b.amount - a.amount);
+  youOweList.sort((a, b) => b.amount - a.amount);
+  
+  if (oweYouList.length === 0) {
+    lentList.innerHTML = `<li style="color: var(--text-tertiary); font-size: 0.75rem; padding: 16px; text-align: center;">No pending collections</li>`;
+  } else {
+    oweYouList.forEach(item => {
+      const li = document.createElement("li");
+      li.className = "people-pending-item";
+      li.innerHTML = `
+        <span class="people-pending-name">${item.name}</span>
+        <span class="people-pending-amount text-emerald">${formatCurrency(item.amount)}</span>
+      `;
+      lentList.appendChild(li);
+    });
+  }
+  
+  if (youOweList.length === 0) {
+    borrowedList.innerHTML = `<li style="color: var(--text-tertiary); font-size: 0.75rem; padding: 16px; text-align: center;">No pending liabilities</li>`;
+  } else {
+    youOweList.forEach(item => {
+      const li = document.createElement("li");
+      li.className = "people-pending-item";
+      li.innerHTML = `
+        <span class="people-pending-name">${item.name}</span>
+        <span class="people-pending-amount text-rose">${formatCurrency(item.amount)}</span>
+      `;
+      borrowedList.appendChild(li);
+    });
+  }
 }
 
 // ==========================================================================
