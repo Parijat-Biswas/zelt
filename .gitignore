@@ -1,0 +1,20 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Android local machines configurations and build directories
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/app/release/
+*.apk
+.gradle/
+build/
+app/build/
+local.properties
+captures/
+app/release/
