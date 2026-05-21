@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
   <title>LedgerFlow — Personal Finance Expense & Debt Tracker</title>
   <meta name="description" content="A modern, spreadsheet-inspired debt, credit, and personal expense tracking workspace. Manage lent and borrowed money with a beautiful, fast, and visual glassmorphism UI.">
   
@@ -458,6 +458,38 @@
 
   <!-- CONFETTI CANVAS EFFECT -->
   <canvas class="confetti-canvas" id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- ONBOARDING WALKTHROUGH OVERLAY -->
+  <div class="walkthrough-overlay" id="walkthrough-overlay" aria-hidden="true">
+    <div class="walkthrough-card">
+      <div class="walkthrough-steps-indicator" id="walkthrough-indicator">
+        <span class="step-dot active"></span>
+        <span class="step-dot"></span>
+        <span class="step-dot"></span>
+      </div>
+      <div class="walkthrough-content">
+        <div class="walkthrough-step active" data-step="1">
+          <div class="walkthrough-icon">🚀</div>
+          <h2>Welcome to LedgerFlow</h2>
+          <p>Your premium workspace for tracking debts, credits, and personal finance with spreadsheet precision.</p>
+        </div>
+        <div class="walkthrough-step" data-step="2">
+          <div class="walkthrough-icon">📊</div>
+          <h2>The Dashboard Hub</h2>
+          <p>Get a bird's-eye view of your net position, pending collections, and financial trends in real-time.</p>
+        </div>
+        <div class="walkthrough-step" data-step="3">
+          <div class="walkthrough-icon">⚡</div>
+          <h2>Quick Entry Magic</h2>
+          <p>Forget messy inline editing. Use the Quick Entry tool to rapidly add new records to your ledger.</p>
+        </div>
+      </div>
+      <div class="walkthrough-footer">
+        <button class="btn btn-text" id="btn-walkthrough-skip">Skip Tour</button>
+        <button class="btn btn-primary" id="btn-walkthrough-next">Next Step</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Seed data and Main scripting orchestration -->
   <script src="dummyData.js"></script>

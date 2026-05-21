@@ -139,6 +139,72 @@ class LedgerState {
   }
 }
 
+// ==========================================================================
+// 12. Onboarding Walkthrough Manager
+// ==========================================================================
+class WalkthroughManager {
+  constructor() {
+    this.overlay = document.getElementById("walkthrough-overlay");
+    this.steps = document.querySelectorAll(".walkthrough-step");
+    this.dots = document.querySelectorAll(".step-dot");
+    this.btnNext = document.getElementById("btn-walkthrough-next");
+    this.btnSkip = document.getElementById("btn-walkthrough-skip");
+    this.currentStep = 1;
+    this.totalSteps = this.steps.length;
+
+    if (this.btnNext) {
+      this.btnNext.addEventListener("click", () => this.nextStep());
+    }
+    if (this.btnSkip) {
+      this.btnSkip.addEventListener("click", () => this.complete());
+    }
+  }
+
+  init() {
+    const isFirstTime = !localStorage.getItem("lf_walkthrough_completed");
+    if (isFirstTime) {
+      setTimeout(() => this.show(), 1000);
+    }
+  }
+
+  show() {
+    this.overlay.classList.add("active");
+    this.overlay.setAttribute("aria-hidden", "false");
+  }
+
+  nextStep() {
+    if (this.currentStep < this.totalSteps) {
+      this.currentStep++;
+      this.updateUI();
+      if (this.currentStep === this.totalSteps) {
+        this.btnNext.textContent = "Get Started";
+      }
+    } else {
+      this.complete();
+    }
+  }
+
+  updateUI() {
+    this.steps.forEach(s => s.classList.remove("active"));
+    this.dots.forEach(d => d.classList.remove("active"));
+
+    const activeStep = document.querySelector(`.walkthrough-step[data-step="${this.currentStep}"]`);
+    if (activeStep) activeStep.classList.add("active");
+
+    if (this.dots[this.currentStep - 1]) {
+      this.dots[this.currentStep - 1].classList.add("active");
+    }
+  }
+
+  complete() {
+    this.overlay.classList.remove("active");
+    this.overlay.setAttribute("aria-hidden", "true");
+    localStorage.setItem("lf_walkthrough_completed", "true");
+  }
+}
+
+const walkthrough = new WalkthroughManager();
+
 // Instantiate global state
 const state = new LedgerState();
 
@@ -153,7 +219,10 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Initial renders
   renderApp();
-  
+
+  // Initialize walkthrough
+  walkthrough.init();
+
   // Custom Events
   window.addEventListener("lf_autosave_start", () => {
     const badge = document.getElementById("autosave-status");
@@ -333,35 +402,7 @@ function bindEventHandlers() {
   // Table add row click binding
   el.btnAddTableRow.style.display = "inline-flex";
   el.btnAddTableRow.addEventListener("click", () => {
-    const newTx = {
-      id: "tx-" + Date.now(),
-      name: "",
-      amount: "",
-      type: "",
-      date: new Date().toISOString().split('T')[0],
-      status: "pending",
-      description: "",
-      tags: [],
-      color: "none",
-      priority: "medium",
-      audit: [{ time: new Date().toISOString(), text: "Record created vertically in spreadsheet." }]
-    };
-    state.transactions.push(newTx);
-    state.logActivity(`Added new transaction row.`, "➕");
-    state.save();
-    renderApp();
-    
-    // Auto-focus the newly created row's Borrower cell!
-    setTimeout(() => {
-      const rows = el.ledgerTableBody.querySelectorAll("tr");
-      if (rows.length > 0) {
-        const lastRow = rows[rows.length - 1];
-        const targetCell = lastRow.children[0]; // Borrower name cell
-        if (targetCell) {
-          targetCell.dispatchEvent(new Event("dblclick"));
-        }
-      }
-    }, 120);
+    openModal();
   });
   
   el.searchInput.addEventListener("input", (e) => {
@@ -1000,12 +1041,21 @@ function renderRecentActivities() {
     return;
   }
   
-  state.activities.slice(0, 8).forEach(act => {
+  state.activities.slice(0, 12).forEach(act => {
     const div = document.createElement("div");
     div.className = "activity-item";
+
+    // Color-coding class based on icon
+    const icon = act.icon || "📝";
+    if (icon === "💰" || icon === "➕") div.classList.add("act-create");
+    else if (icon === "✏️" || icon === "⚙️") div.classList.add("act-update");
+    else if (icon === "🗑️") div.classList.add("act-delete");
+    else if (icon === "⏰") div.classList.add("act-reminder");
+    else div.classList.add("act-default");
+
     const timeStr = formatRelativeTime(new Date(act.time));
     div.innerHTML = `
-      <span class="activity-icon">${act.icon || "📝"}</span>
+      <span class="activity-icon">${icon}</span>
       <div class="activity-details">
         <span class="activity-text">${act.text}</span>
         <span class="activity-time">${timeStr}</span>
