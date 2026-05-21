@@ -34,17 +34,27 @@ class LedgerState {
     }
     document.documentElement.setAttribute("data-theme", this.theme);
 
+    // Clean slate one-time reset check to wipe existing local storage dummy data
+    const wasReset = localStorage.getItem("lf_clean_slate_reset_v1");
+    if (!wasReset) {
+      localStorage.removeItem("lf_transactions");
+      localStorage.removeItem("lf_people");
+      localStorage.removeItem("lf_activities");
+      localStorage.removeItem("lf_custom_reminders");
+      localStorage.setItem("lf_clean_slate_reset_v1", "true");
+    }
+
     // Load Transactions
     const storedTx = localStorage.getItem("lf_transactions");
     if (storedTx) {
       try {
         this.transactions = JSON.parse(storedTx);
       } catch (e) {
-        console.error("Failed to parse stored transactions, falling back to seed", e);
-        this.transactions = [...window.initialTransactions];
+        console.error("Failed to parse stored transactions", e);
+        this.transactions = [];
       }
     } else {
-      this.transactions = [...window.initialTransactions];
+      this.transactions = [];
       this.save(true);
     }
 
@@ -94,10 +104,6 @@ class LedgerState {
   extractPeopleFromTransactions() {
     // Return unique names chronologically or alphabetically
     const unique = new Set(this.transactions.map(t => t.name));
-    // Add defaults if empty
-    if (unique.size === 0) {
-      return ["Alex Johnson", "Sarah Chen", "David Miller", "Emma Watson", "Landlord Joe", "Marcus Aurelius"];
-    }
     return Array.from(unique);
   }
 
@@ -279,8 +285,8 @@ function switchTab(targetTab) {
     el.pageTitle.textContent = "Dashboard Hub";
     el.pageSubtitle.textContent = "Welcome back. Here is your financial posture at a glance.";
   } else if (targetTab === "ledger") {
-    el.pageTitle.textContent = "Spreadsheet Workspace";
-    el.pageSubtitle.textContent = "Manage credit, lent, and borrowed personal records in a clean, vertical spreadsheet grid.";
+    el.pageTitle.textContent = "Logs";
+    el.pageSubtitle.textContent = "Manage credit, lent, and borrowed personal records in a clean, vertical grid.";
   } else if (targetTab === "reminders") {
     el.pageTitle.textContent = "Reminders & Alerts";
     el.pageSubtitle.textContent = "Calculated schedules based on payment terms and due dates.";
