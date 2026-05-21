@@ -335,13 +335,13 @@ function bindEventHandlers() {
   el.btnAddTableRow.addEventListener("click", () => {
     const newTx = {
       id: "tx-" + Date.now(),
-      name: "New Person",
-      amount: 1000.00,
-      type: "lent",
+      name: "",
+      amount: "",
+      type: "",
       date: new Date().toISOString().split('T')[0],
       status: "pending",
-      description: "New transaction entry",
-      tags: ["General"],
+      description: "",
+      tags: [],
       color: "none",
       priority: "medium",
       audit: [{ time: new Date().toISOString(), text: "Record created vertically in spreadsheet." }]
@@ -448,7 +448,7 @@ function updateMetricsData() {
       if (t.status !== "paid") {
         lentSum += val;
       }
-    } else {
+    } else if (t.type === "borrowed") {
       if (t.status !== "paid") {
         borrowedSum += val;
       }
@@ -575,37 +575,58 @@ function renderTable() {
     // Cell 1: Borrower (Double-clickable to edit)
     const tdName = document.createElement("td");
     tdName.className = "cell-name";
-    tdName.innerHTML = `<span class="cell-text-bold">${tx.name}</span>`;
+    const nameVal = tx.name.trim() || "-";
+    const nameStyle = tx.name.trim() ? "" : "color: var(--text-tertiary); font-weight: normal;";
+    tdName.innerHTML = `<span class="cell-text-bold" style="${nameStyle}">${nameVal}</span>`;
     makeCellEditable(tdName, tx, "name", 
       t => {
         const input = document.createElement("input");
         input.type = "text";
         input.className = "cell-input-edit";
         input.value = t.name;
+        input.placeholder = "Enter name...";
         return input;
       },
-      input => input.value.trim() || "Untitled"
+      input => input.value.trim()
     );
     tr.appendChild(tdName);
     
     // Cell 2: Flow Type (Double-clickable to toggle)
     const tdFlow = document.createElement("td");
     tdFlow.className = "cell-flow";
-    const flowText = tx.type === "lent" ? "Lent (↗)" : "Borrowed (↘)";
-    const flowCls = tx.type === "lent" ? "text-emerald" : "text-rose";
+    
+    let flowText = "-";
+    let flowCls = "text-muted";
+    if (tx.type === "lent") {
+      flowText = "Lent (↗)";
+      flowCls = "text-emerald";
+    } else if (tx.type === "borrowed") {
+      flowText = "Borrowed (↘)";
+      flowCls = "text-rose";
+    }
+    
     tdFlow.innerHTML = `<span class="${flowCls}" style="font-weight: 600; font-size: 0.8rem;">${flowText}</span>`;
     makeCellEditable(tdFlow, tx, "type",
       t => {
         const select = document.createElement("select");
         select.className = "cell-select-edit form-select";
+        
+        const optPlaceholder = document.createElement("option");
+        optPlaceholder.value = "";
+        optPlaceholder.textContent = "-- Select Flow --";
+        if (!t.type) optPlaceholder.selected = true;
+        select.appendChild(optPlaceholder);
+
         const optLent = document.createElement("option");
         optLent.value = "lent";
         optLent.textContent = "LENT (They owe me)";
         if (t.type === "lent") optLent.selected = true;
+        
         const optBorrow = document.createElement("option");
         optBorrow.value = "borrowed";
         optBorrow.textContent = "BORROWED (I owe them)";
         if (t.type === "borrowed") optBorrow.selected = true;
+        
         select.appendChild(optLent);
         select.appendChild(optBorrow);
         return select;
@@ -617,19 +638,29 @@ function renderTable() {
     // Cell 3: Amount (Double-clickable to edit)
     const tdAmount = document.createElement("td");
     tdAmount.className = "cell-amount";
-    const amtCls = tx.type === "lent" ? "text-emerald" : "text-rose";
-    const prefix = tx.type === "lent" ? "+ " : "- ";
-    tdAmount.innerHTML = `<span class="cell-amount-text ${amtCls}">${prefix}${formatCurrency(tx.amount)}</span>`;
+    
+    const isLent = tx.type === "lent";
+    const isBorrowed = tx.type === "borrowed";
+    const amtCls = isLent ? "text-emerald" : (isBorrowed ? "text-rose" : "text-muted");
+    const prefix = isLent ? "+ " : (isBorrowed ? "- " : "");
+    const hasAmount = tx.amount !== undefined && tx.amount !== null && tx.amount !== "";
+    const amountVal = hasAmount ? formatCurrency(tx.amount) : "-";
+    
+    tdAmount.innerHTML = `<span class="cell-amount-text ${amtCls}">${prefix}${amountVal}</span>`;
     makeCellEditable(tdAmount, tx, "amount",
       t => {
         const input = document.createElement("input");
         input.type = "number";
         input.step = "0.01";
         input.className = "cell-input-edit";
-        input.value = t.amount;
+        input.placeholder = "0.00";
+        input.value = (t.amount !== undefined && t.amount !== null && t.amount !== "") ? t.amount : "";
         return input;
       },
-      input => Math.max(0, Number(input.value) || 0)
+      input => {
+        const val = input.value.trim();
+        return val === "" ? "" : Math.max(0, Number(val) || 0);
+      }
     );
     tr.appendChild(tdAmount);
     
@@ -1136,7 +1167,7 @@ function renderPendingSettlementsDirectory() {
     
     if (t.type === "lent") {
       balances[name] += val;
-    } else {
+    } else if (t.type === "borrowed") {
       balances[name] -= val;
     }
   });

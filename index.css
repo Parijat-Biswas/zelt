@@ -1697,6 +1697,45 @@ button {
   height: 24px;
 }
 
+/* Table Bottom Bar & Footer Stats Styling */
+.table-footer-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--border-subtle);
+  user-select: none;
+  font-size: 0.8rem;
+}
+
+.table-stats {
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.table-stats span {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.btn-add-row {
+  font-weight: 600;
+  color: var(--accent-purple);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-add-row:hover {
+  opacity: 0.8;
+}
+
 /* --------------------------------------------------------------------------
    12. Responsive Adjustments
    -------------------------------------------------------------------------- */
