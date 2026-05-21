@@ -1,0 +1,23 @@
+{
+  "name": "ledgerflow",
+  "version": "1.0.0",
+  "description": "LedgerFlow — Premium Columnar Personal Finance Logs & Reminders Tracker",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "keywords": [
+    "personal-finance",
+    "ledger",
+    "capacitor",
+    "apk",
+    "expense-tracker"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^5.7.0",
+    "@capacitor/cli": "^5.7.0",
+    "@capacitor/core": "^5.7.0"
+  }
+}
